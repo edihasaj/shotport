@@ -1,4 +1,18 @@
-# shotport
+<p align="center">
+  <img src="assets/logo.svg" width="520" alt="shotport"/>
+</p>
+
+<p align="center"><em>Token-cheap screenshot capture for coding agents.</em></p>
+<p align="center"><strong>Text first. Budgeted pixels only when needed.</strong></p>
+
+<p align="center">
+  <a href="https://github.com/edihasaj/shotport/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/edihasaj/shotport/actions/workflows/ci.yml/badge.svg"/></a>
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"/>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-black"/>
+  <img alt="Runtime" src="https://img.shields.io/badge/runtime-Bun-f9f1e1"/>
+</p>
+
+---
 
 `shotport` does the heavy screenshot work for coding agents: capture through the right local tool, extract text first, resize the image to a token budget, then print a compact result.
 
@@ -11,11 +25,27 @@ Example Domain
 ...
 ```
 
-Agents can read the text from stdout and only open the image path when pixels are actually needed. This is the automation layer for the screenshot-token cost that `spendwatch` surfaced: no more sending raw 4M+ token screenshots when a budgeted image plus accessibility/OCR text will do.
+Agents read the text from stdout and only open the image path when pixels are actually needed. This is the automation layer for the screenshot-token cost that [`spendwatch`](https://github.com/edihasaj/spendwatch) surfaced: no more sending raw 4M+ token screenshots when a budgeted image plus accessibility/OCR text will do.
+
+## Why
+
+A single raw screenshot can cost millions of tokens. Most of the time an agent needs the *content* of the screen — a label, an error, a value — not the pixels. `shotport` inverts the default:
+
+1. **Text first.** Pull accessibility text (or OCR) and print it to stdout. Often that's the whole answer.
+2. **Budgeted pixels.** When pixels matter, resize the image to fit an approximate token budget before it ever reaches the model.
+3. **One compact line.** A stable summary line the agent can parse, plus the image path to open on demand.
 
 ## Install
 
-Requires Bun on the build machine.
+Requires [Bun](https://bun.sh) on the build machine.
+
+```sh
+# Build + install the standalone binary to /opt/homebrew/bin
+bun install
+bun run install:local
+```
+
+Or step by step:
 
 ```sh
 bun install
@@ -23,19 +53,21 @@ bun run build
 install -m 0755 ./dist/shotport /opt/homebrew/bin/shotport
 ```
 
-Shortcut:
+One-liner from source:
 
 ```sh
-bun run install:local
+curl -fsSL https://raw.githubusercontent.com/edihasaj/shotport/main/scripts/install.sh | sh
 ```
 
 The binary is standalone after compilation. Runtime backends are optional and checked gracefully:
 
-- `abx` for browser capture, accessibility text, selectors, and clips
-- `guiport` for macOS app/desktop screenshots and accessibility text
+- [`abx`](https://github.com/edihasaj/abx) for browser capture, accessibility text, selectors, and clips
+- [`guiport`](https://github.com/edihasaj/guiport) for macOS app/desktop screenshots and accessibility text
 - `screencapture`, `sips`, `xcrun simctl`, and `adb` for native fallbacks
 - Apple Vision via `swift`, then `tesseract`, for OCR fallback
 - `cwebp` for WebP output when requested
+
+Missing a backend never crashes a run — `shotport` returns whatever it can and notes what was unavailable.
 
 ## Usage
 
@@ -90,12 +122,35 @@ Desktop flow uses `guiport screenshot` when present, then `screencapture`. iOS u
 
 On macOS, desktop and app pixels require Screen Recording permission for the invoking terminal/tool. If the permission is missing, `shotport` keeps the run useful by returning any available accessibility text plus a note such as `screen_recording_not_granted`; grant it with `guiport doctor --fix` or System Settings → Privacy & Security → Screen Recording.
 
+## The agent fleet
+
+`shotport` is one tool in a suite of standalone, agent-facing CLIs that compose:
+
+| Project | Role |
+|---|---|
+| [**shotport**](https://github.com/edihasaj/shotport) | Token-cheap screenshot capture. Text first, budgeted pixels only when needed. You are here. |
+| [**guiport**](https://github.com/edihasaj/guiport) | Playwright for desktop apps. AX tree + OCR fallback. `shotport` calls it for app/desktop capture. |
+| [**abx**](https://github.com/edihasaj/abx) | Browser automation for agents. `shotport` calls it for browser capture and accessibility text. |
+| [**vmlab**](https://github.com/edihasaj/vmlab) | Cross-OS verify orchestrator. Composes these tools across any reachable target. |
+| [**spendwatch**](https://github.com/edihasaj/spendwatch) | Token/$ leaderboards for coding agents — the reason `shotport` exists. |
+
 ## Development
 
 ```sh
+bun install
 bun test
 bun run typecheck
 bun run build
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution wedge and PR checklist.
+
 No analytics. No secrets. MIT licensed.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Author
+
+[Edi Hasaj](https://edihasaj.com)
