@@ -88,6 +88,8 @@ App flow:
 
 Desktop flow uses `guiport screenshot` when present, then `screencapture`. iOS uses `xcrun simctl io booted screenshot`. Android uses `adb exec-out screencap -p` and returns a clean missing-backend note when `adb` is absent.
 
+On macOS, desktop and app pixels require Screen Recording permission for the invoking terminal/tool. If the permission is missing, `shotport` keeps the run useful by returning any available accessibility text plus a note such as `screen_recording_not_granted`; grant it with `guiport doctor --fix` or System Settings → Privacy & Security → Screen Recording.
+
 ## Development
 
 ```sh
