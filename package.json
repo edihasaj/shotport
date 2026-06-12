@@ -1,0 +1,34 @@
+{
+  "name": "shotport",
+  "version": "0.1.0",
+  "description": "Token-cheap screenshot capture for coding agents.",
+  "bin": {
+    "shotport": "./dist/shotport"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build ./index.ts --compile --outfile ./dist/shotport",
+    "install:local": "bun run build && install -m 0755 ./dist/shotport /opt/homebrew/bin/shotport",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "dist/shotport",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "screenshot",
+    "cli",
+    "agents",
+    "ocr",
+    "accessibility"
+  ],
+  "author": "Edi Hasaj",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
