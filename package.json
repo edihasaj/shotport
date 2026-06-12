@@ -7,7 +7,14 @@
   },
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "homepage": "https://github.com/edihasaj/shotport#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edihasaj/shotport.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edihasaj/shotport/issues"
+  },
   "scripts": {
     "build": "bun build ./index.ts --compile --outfile ./dist/shotport",
     "install:local": "bun run build && install -m 0755 ./dist/shotport /opt/homebrew/bin/shotport",
@@ -26,7 +33,7 @@
     "ocr",
     "accessibility"
   ],
-  "author": "Edi Hasaj",
+  "author": "Edi Hasaj <edihasaj@gmail.com> (https://edihasaj.com)",
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest",
