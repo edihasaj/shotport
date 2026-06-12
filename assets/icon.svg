@@ -1,0 +1,36 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="shotport">
+  <title>shotport</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F1730"/>
+      <stop offset="1" stop-color="#070B16"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC857"/>
+      <stop offset="1" stop-color="#F5A524"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="32" y="32" width="960" height="960" rx="208" fill="none" stroke="#1B2438" stroke-width="2"/>
+
+  <!-- Screenshot capture frame: four corner brackets (the screencapture selection motif) -->
+  <g fill="none" stroke="#E9E5D4" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M232 300 V200 H332"/>
+    <path d="M692 200 H792 V300"/>
+    <path d="M232 580 V680 H332"/>
+    <path d="M692 680 H792 V580"/>
+  </g>
+
+  <!-- Image glyph inside the frame: sun + mountain range = the budgeted pixels -->
+  <circle cx="640" cy="318" r="46" fill="url(#amber)"/>
+  <path d="M276 612 L452 372 L566 512 L676 360 L748 612 Z" fill="url(#amber)"/>
+
+  <!-- Plug pins below: the shared 'port' motif across the suite -->
+  <g fill="url(#amber)">
+    <rect x="402" y="740" width="36" height="120" rx="10"/>
+    <rect x="494" y="740" width="36" height="120" rx="10"/>
+    <rect x="586" y="740" width="36" height="120" rx="10"/>
+  </g>
+</svg>

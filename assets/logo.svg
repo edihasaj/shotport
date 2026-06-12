@@ -1,0 +1,49 @@
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="shotport">
+  <title>shotport</title>
+  <defs>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F1730"/>
+      <stop offset="1" stop-color="#070B16"/>
+    </linearGradient>
+    <linearGradient id="logo-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC857"/>
+      <stop offset="1" stop-color="#F5A524"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ICON (180x180 at left) -->
+  <g transform="translate(10,10)">
+    <rect width="180" height="180" rx="40" fill="url(#logo-bg)"/>
+    <rect x="6" y="6" width="168" height="168" rx="36" fill="none" stroke="#1B2438"/>
+
+    <!-- Capture frame brackets -->
+    <g transform="translate(34,36)" fill="none" stroke="#E9E5D4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 24 V2 H24"/>
+      <path d="M88 2 H110 V24"/>
+      <path d="M2 86 V108 H24"/>
+      <path d="M88 108 H110 V86"/>
+    </g>
+
+    <!-- Image glyph: sun + mountains -->
+    <g transform="translate(34,36)">
+      <circle cx="84" cy="33" r="11" fill="url(#logo-amber)"/>
+      <path d="M14 92 L46 50 L66 74 L86 46 L98 92 Z" fill="url(#logo-amber)"/>
+    </g>
+
+    <!-- Plug pins -->
+    <g fill="url(#logo-amber)">
+      <rect x="62"  y="146" width="7" height="22" rx="2"/>
+      <rect x="86.5" y="146" width="7" height="22" rx="2"/>
+      <rect x="111" y="146" width="7" height="22" rx="2"/>
+    </g>
+  </g>
+
+  <!-- WORDMARK -->
+  <g transform="translate(214,0)">
+    <text x="0" y="124"
+          font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+          font-weight="800" font-size="104" letter-spacing="-6" fill="#E9E5D4">shotport</text>
+    <!-- Cursor / connector underline -->
+    <rect x="0" y="142" width="498" height="9" rx="1.5" fill="url(#logo-amber)"/>
+  </g>
+</svg>
