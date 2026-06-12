@@ -1,4 +1,5 @@
 import { copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, extname, join } from "node:path";
 import type { GlobalOptions, ImageInfo, OutputFormat, Runner } from "./types";
 import { BackendError } from "./errors";
@@ -64,7 +65,7 @@ export async function readImageSize(runner: Runner, path: string): Promise<{ wid
 }
 
 async function tempImagePath(format: OutputFormat): Promise<string> {
-  const dir = await mkdtemp(join("/private/tmp", "shotport-"));
+  const dir = await mkdtemp(join(tmpdir(), "shotport-"));
   return join(dir, `capture.${format === "jpeg" ? "jpg" : format}`);
 }
 

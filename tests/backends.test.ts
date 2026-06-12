@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos } from "../src/backends";
 import type { GlobalOptions } from "../src/types";
 import { MockRunner } from "./mockRunner";
@@ -30,6 +31,9 @@ describe("backends", () => {
     expect(runner.calls.map((call) => call.args.slice(0, 3))).toContainEqual(["abx", "goto", "https://example.com"]);
     expect(runner.calls.some((call) => call.args.join(" ").includes("screenshot --clip 0,0,300,200 main"))).toBe(true);
     expect(result.image?.tokens).toBeGreaterThan(0);
+    // Capture must write under the OS temp dir, not a hardcoded macOS path,
+    // so it works on Linux CI too.
+    expect(result.image?.path.startsWith(tmpdir())).toBe(true);
   });
 
   test("desktop falls back to screencapture when guiport is absent", async () => {

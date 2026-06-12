@@ -1,4 +1,5 @@
 import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AppOptions, BrowserOptions, DesktopOptions, GlobalOptions, Runner, ShotResult, TextBlock } from "./types";
 import { BackendError } from "./errors";
@@ -115,7 +116,7 @@ export async function captureAndroid(runner: Runner, global: GlobalOptions): Pro
 
 async function maybeImage(runner: Runner, global: GlobalOptions, capture: (rawPath: string) => Promise<void>) {
   if (global.textOnly) return undefined;
-  const rawPath = join(await mkdtemp(join("/private/tmp", "shotport-raw-")), "raw.png");
+  const rawPath = join(await mkdtemp(join(tmpdir(), "shotport-raw-")), "raw.png");
   await capture(rawPath);
   return budgetImage(runner, rawPath, global);
 }

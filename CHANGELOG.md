@@ -12,6 +12,10 @@ All notable changes to shotport are documented here. Format loosely follows
 - Open-source scaffolding: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates, and CI/release workflows.
 - `scripts/install.sh` for a one-line build-and-install from source.
 
+### Fixed
+
+- Capture wrote to a hardcoded `/private/tmp` path, which doesn't exist on Linux — now uses the OS temp dir (`os.tmpdir()`) so capture works on Linux too. Regression test added.
+
 ## [0.1.0]
 
 ### Added
