@@ -1,0 +1,49 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: ["bug"]
+body:
+  - type: input
+    id: os
+    attributes:
+      label: OS + version
+      description: "macOS (`sw_vers -productVersion`) or Linux distro + version"
+      placeholder: "macOS 14.5"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: shotport version / commit
+      description: "Output of `git rev-parse HEAD` or the release tag"
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: "The exact shotport command you ran"
+      placeholder: "shotport browser https://example.com --budget 900 --webp"
+    validations:
+      required: true
+  - type: input
+    id: backends
+    attributes:
+      label: Installed backends
+      description: "Which of abx, guiport, tesseract, cwebp are present?"
+      placeholder: "abx, guiport, cwebp"
+    validations:
+      required: false
+  - type: textarea
+    id: output
+    attributes:
+      label: Full stdout / stderr
+      description: "Include any *_not_granted / *_missing notes."
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual
+    validations:
+      required: true
