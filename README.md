@@ -35,6 +35,22 @@ A single raw screenshot can cost millions of tokens. Most of the time an agent n
 2. **Budgeted pixels.** When pixels matter, resize the image to fit an approximate token budget before it ever reaches the model.
 3. **One compact line.** A stable summary line the agent can parse, plus the image path to open on demand.
 
+## Attach the current window
+
+Instead of dragging a screenshot into your agent like a caveman, hand it the **frontmost window** in one command:
+
+```sh
+shotport window
+```
+
+No app name needed — `shotport` resolves whatever is focused, dumps the window's full accessibility tree (**including text scrolled out of view**, when the app exposes it), and budgets a screenshot only if you ask for pixels. Pair it with `--full-text` to keep the entire window text:
+
+```sh
+shotport window --full-text --text-only
+```
+
+This is the agent-facing version of "attach my current window" — text first, so the model usually doesn't need the pixels at all.
+
 ## Install
 
 Requires [Bun](https://bun.sh) on the build machine.
@@ -72,6 +88,7 @@ Missing a backend never crashes a run — `shotport` returns whatever it can and
 ## Usage
 
 ```sh
+shotport window [--window <title>] [--region x,y,w,h] [flags]
 shotport browser <url|-> [--element <sel>] [--clip x,y,w,h] [flags]
 shotport app <name> [--window <title>] [--region x,y,w,h] [flags]
 shotport desktop [--region x,y,w,h] [flags]
@@ -88,6 +105,8 @@ Flags:
 --out <path>         Output image path; default is a temp file
 --budget <tokens>    Resize image to fit approximate token budget
 --max-px <pixels>    Max long edge before token budgeting (default: 1280)
+--max-chars <n>      Cap extracted text length (default: 6000)
+--full-text          Keep all extracted text — don't truncate
 --jpeg               Convert budgeted image to JPEG
 --webp               Convert budgeted image to WebP when cwebp exists
 ```
@@ -95,7 +114,8 @@ Flags:
 Examples:
 
 ```sh
-shotport browser https://example.com
+shotport window
+shotport window --full-text --text-only
 shotport browser https://example.com --element main --budget 900 --webp
 shotport app Calculator --window Calculator
 shotport desktop --region 0,0,1200,800 --json
@@ -104,6 +124,12 @@ shotport android --text-only
 ```
 
 ## Backends
+
+Window flow (the frontmost app, no name needed):
+
+1. `guiport apps --json` → pick the active app that owns a window
+2. `guiport tree --app <name>` for the full focused-window text
+3. `guiport screenshot --app <name> -o <path>` for budgeted pixels
 
 Browser flow:
 

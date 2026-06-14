@@ -29,10 +29,10 @@ export function compactText(text: string, maxChars = 6000): string {
   return compacted.length > maxChars ? `${compacted.slice(0, maxChars)}\n...` : compacted;
 }
 
-export function jsonToText(value: unknown): string {
+export function jsonToText(value: unknown, maxChars = 6000): string {
   const parts: string[] = [];
   walk(value, parts);
-  return compactText([...new Set(parts)].join("\n"));
+  return compactText([...new Set(parts)].join("\n"), maxChars);
 }
 
 async function visionOcr(runner: Runner, imagePath: string): Promise<{ text: string; notes: string[] }> {

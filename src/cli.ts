@@ -2,7 +2,7 @@ import { BackendError, UsageError } from "./errors";
 import { helpText, VERSION } from "./help";
 import { parseArgv } from "./parse";
 import { ProcessRunner } from "./runner";
-import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos } from "./backends";
+import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos, captureWindow } from "./backends";
 import { formatResult } from "./output";
 import type { Runner, ShotResult } from "./types";
 
@@ -40,6 +40,7 @@ type RunnableCommand = Exclude<ReturnType<typeof parseArgv>, { kind: "help" | "v
 async function dispatch(command: RunnableCommand, runner: Runner): Promise<ShotResult> {
   if (command.kind === "browser") return captureBrowser(runner, command.options, command.global);
   if (command.kind === "app") return captureApp(runner, command.options, command.global);
+  if (command.kind === "window") return captureWindow(runner, command.options, command.global);
   if (command.kind === "desktop") return captureDesktop(runner, command.options, command.global);
   if (command.kind === "ios") return captureIos(runner, command.global);
   return captureAndroid(runner, command.global);

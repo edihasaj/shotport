@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos } from "../src/backends";
+import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos, captureWindow } from "../src/backends";
 import type { GlobalOptions } from "../src/types";
 import { MockRunner } from "./mockRunner";
 
@@ -10,6 +10,7 @@ const global: GlobalOptions = {
   textOnly: false,
   imageOnly: false,
   maxPx: 1280,
+  maxChars: 6000,
   format: "png",
   help: false,
   version: false,
@@ -82,6 +83,50 @@ describe("backends", () => {
     expect(result.image).toBeUndefined();
     expect(result.text?.text).toContain("Equals");
     expect(result.notes.join("\n")).toContain("screen_recording_not_granted");
+  });
+
+  test("window resolves the frontmost app and dumps its full window text", async () => {
+    const runner = new MockRunner(["guiport", "sips"]);
+    runner.on((args) => args[0] === "guiport" && args[1] === "apps", {
+      stdout: JSON.stringify([
+        { name: "Finder", active: false, windowCount: 1 },
+        { name: "Notes", active: true, windowCount: 2 },
+        { name: "Spotlight", active: true, windowCount: 0 },
+      ]),
+    });
+    runner.on((args) => args[0] === "guiport" && args[1] === "tree", {
+      stdout: JSON.stringify({ name: "Notes", children: [{ name: "Grocery list" }] }),
+    });
+    runner.on((args) => args[0] === "guiport" && args[1] === "screenshot", async (args) => {
+      await writeFile(args.at(-1)!, "");
+      return {};
+    });
+    runner.on((args) => args[0] === "sips" && args.includes("pixelWidth"), {
+      stdout: "  pixelWidth: 800\n  pixelHeight: 600\n",
+    });
+    const result = await captureWindow(runner, {}, global);
+    // Picks the active app that actually owns a window, not the windowless one.
+    expect(result.target).toBe("window Notes");
+    expect(runner.calls.some((call) => call.args.join(" ").includes("guiport tree --app Notes"))).toBe(true);
+    expect(result.text?.text).toContain("Grocery list");
+  });
+
+  test("window reports cleanly when guiport is absent", async () => {
+    const result = await captureWindow(new MockRunner([]), {}, global);
+    expect(result.image).toBeUndefined();
+    expect(result.notes.join("\n")).toContain("guiport missing");
+  });
+
+  test("--full-text keeps text past the default cap", async () => {
+    const runner = new MockRunner(["guiport"]);
+    const long = Array.from({ length: 400 }, (_, i) => `row-${i}-scrolled-out-of-view`).join(" ");
+    runner.on((args) => args[0] === "guiport" && args[1] === "tree", {
+      stdout: JSON.stringify({ name: "Doc", value: long }),
+    });
+    const full = await captureApp(runner, { name: "Doc" }, { ...global, textOnly: true, maxChars: Number.MAX_SAFE_INTEGER });
+    const capped = await captureApp(runner, { name: "Doc" }, { ...global, textOnly: true, maxChars: 200 });
+    expect(full.text!.text.length).toBeGreaterThan(capped.text!.text.length);
+    expect(capped.text!.text.length).toBeLessThanOrEqual(204); // 200 + "\n..."
   });
 
   test("ios reports no booted simulator without crashing", async () => {

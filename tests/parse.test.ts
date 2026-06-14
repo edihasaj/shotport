@@ -23,4 +23,22 @@ describe("parseArgv", () => {
     expect(command.options.window).toBe("Calc");
     expect(command.options.region).toBe("1,2,3,4");
   });
+
+  test("parses window subcommand with no app name", () => {
+    const command = parseArgv(["window", "--full-text", "--text-only"]);
+    expect(command.kind).toBe("window");
+    if (command.kind !== "window") return;
+    expect(command.global.textOnly).toBe(true);
+    expect(command.global.maxChars).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  test("--max-chars sets the text cap; default is 6000", () => {
+    const def = parseArgv(["window"]);
+    const set = parseArgv(["window", "--max-chars", "20000"]);
+    expect(def.kind).toBe("window");
+    expect(set.kind).toBe("window");
+    if (def.kind !== "window" || set.kind !== "window") return;
+    expect(def.global.maxChars).toBe(6000);
+    expect(set.global.maxChars).toBe(20000);
+  });
 });

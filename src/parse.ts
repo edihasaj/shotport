@@ -2,6 +2,8 @@ import { UsageError } from "./errors";
 import type { Command, GlobalOptions, OutputFormat } from "./types";
 
 const DEFAULT_MAX_PX = 1280;
+const DEFAULT_MAX_CHARS = 6000;
+const FULL_TEXT_MAX_CHARS = Number.MAX_SAFE_INTEGER;
 
 export function parseArgv(argv: string[]): Command {
   const global: GlobalOptions = {
@@ -9,6 +11,7 @@ export function parseArgv(argv: string[]): Command {
     textOnly: false,
     imageOnly: false,
     maxPx: DEFAULT_MAX_PX,
+    maxChars: DEFAULT_MAX_CHARS,
     format: "png",
     help: false,
     version: false,
@@ -27,6 +30,8 @@ export function parseArgv(argv: string[]): Command {
     else if (arg === "--out") global.out = takeValue(argv, ++index, "--out");
     else if (arg === "--budget") global.budget = parsePositiveInt(takeValue(argv, ++index, "--budget"), "--budget");
     else if (arg === "--max-px") global.maxPx = parsePositiveInt(takeValue(argv, ++index, "--max-px"), "--max-px");
+    else if (arg === "--max-chars") global.maxChars = parsePositiveInt(takeValue(argv, ++index, "--max-chars"), "--max-chars");
+    else if (arg === "--full-text") global.maxChars = FULL_TEXT_MAX_CHARS;
     else rest.push(arg);
   }
 
@@ -51,6 +56,12 @@ export function parseArgv(argv: string[]): Command {
     const named = parseNamed(rest, ["--window", "--region"]);
     ensureNoExtra(rest);
     return { kind: "app", global, options: { name, window: named.window, region: named.region } };
+  }
+
+  if (subcommand === "window") {
+    const named = parseNamed(rest, ["--window", "--region"]);
+    ensureNoExtra(rest);
+    return { kind: "window", global, options: { window: named.window, region: named.region } };
   }
 
   if (subcommand === "desktop") {

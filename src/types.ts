@@ -8,6 +8,7 @@ export interface GlobalOptions {
   out?: string;
   budget?: number;
   maxPx: number;
+  maxChars: number;
   format: OutputFormat;
   help: boolean;
   version: boolean;
@@ -29,11 +30,17 @@ export interface DesktopOptions {
   region?: string;
 }
 
+export interface WindowOptions {
+  window?: string;
+  region?: string;
+}
+
 export type Command =
   | { kind: "help"; topic?: string }
   | { kind: "version" }
   | { kind: "browser"; global: GlobalOptions; options: BrowserOptions }
   | { kind: "app"; global: GlobalOptions; options: AppOptions }
+  | { kind: "window"; global: GlobalOptions; options: WindowOptions }
   | { kind: "desktop"; global: GlobalOptions; options: DesktopOptions }
   | { kind: "ios"; global: GlobalOptions }
   | { kind: "android"; global: GlobalOptions };

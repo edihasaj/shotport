@@ -1,7 +1,7 @@
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AppOptions, BrowserOptions, DesktopOptions, GlobalOptions, Runner, ShotResult, TextBlock } from "./types";
+import type { AppOptions, BrowserOptions, DesktopOptions, GlobalOptions, Runner, ShotResult, TextBlock, WindowOptions } from "./types";
 import { BackendError } from "./errors";
 import { budgetImage } from "./image";
 import { compactText, jsonToText, ocrImage } from "./text";
@@ -16,7 +16,7 @@ export async function captureBrowser(runner: Runner, options: BrowserOptions, gl
   let text: TextBlock | undefined;
   if (!global.imageOnly) {
     const a11y = await runner.run(["abx", "accessibility"]);
-    if (a11y.code === 0) text = { source: "a11y", text: compactText(a11y.stdout), notes: [] };
+    if (a11y.code === 0) text = { source: "a11y", text: compactText(a11y.stdout, global.maxChars), notes: [] };
     else text = { source: "none", text: "", notes: [`abx accessibility failed: ${a11y.stderr.trim() || a11y.stdout.trim()}`] };
   }
 
@@ -40,13 +40,13 @@ export async function captureApp(runner: Runner, options: AppOptions, global: Gl
     if (options.window) args.push("--window", options.window);
     const tree = await runner.run(args);
     if (tree.code === 0) {
-      text = parseStructuredText("a11y", tree.stdout);
+      text = parseStructuredText("a11y", tree.stdout, global.maxChars);
     } else {
       const observeArgs = ["guiport", "observe", "--app", options.name];
       if (options.window) observeArgs.push("--window", options.window);
       const observed = await runner.run(observeArgs);
       text = observed.code === 0
-        ? { source: "observe", text: compactText(observed.stdout), notes: [`guiport tree failed: ${tree.stderr.trim() || tree.stdout.trim()}`] }
+        ? { source: "observe", text: compactText(observed.stdout, global.maxChars), notes: [`guiport tree failed: ${tree.stderr.trim() || tree.stdout.trim()}`] }
         : { source: "none", text: "", notes: [`guiport tree failed: ${tree.stderr.trim() || tree.stdout.trim()}`, `guiport observe failed: ${observed.stderr.trim() || observed.stdout.trim()}`] };
     }
   }
@@ -64,6 +64,35 @@ export async function captureApp(runner: Runner, options: AppOptions, global: Gl
 
   if (!global.imageOnly && text?.source === "none" && image) text = await ocrImage(runner, image.path);
   return { target: `app ${options.name}`, image, text, notes };
+}
+
+// Capture whatever window is frontmost right now — no app name needed.
+// Resolves the active app via `guiport apps`, then runs the app flow, whose
+// `guiport tree` dump includes window text scrolled out of view.
+export async function captureWindow(runner: Runner, options: WindowOptions, global: GlobalOptions): Promise<ShotResult> {
+  if (!(await runner.exists("guiport"))) return missing("window", "guiport");
+  const active = await runner.run(["guiport", "apps", "--json"]);
+  if (active.code !== 0) {
+    return { target: "window", notes: [`guiport apps failed: ${active.stderr.trim() || active.stdout.trim()}`] };
+  }
+  const name = frontmostApp(active.stdout);
+  if (!name) return { target: "window", notes: ["no frontmost app with a window found"] };
+
+  const result = await captureApp(runner, { name, window: options.window, region: options.region }, global);
+  return { ...result, target: `window ${name}${options.window ? ` · ${options.window}` : ""}` };
+}
+
+function frontmostApp(stdout: string): string | undefined {
+  let apps: Array<{ name?: string; active?: boolean; windowCount?: number }>;
+  try {
+    apps = JSON.parse(stdout);
+  } catch {
+    return undefined;
+  }
+  if (!Array.isArray(apps)) return undefined;
+  const active = apps.filter((app) => app.active && app.name);
+  // Prefer the active app that actually owns a window; fall back to any active app.
+  return (active.find((app) => (app.windowCount ?? 0) > 0) ?? active[0])?.name;
 }
 
 export async function captureDesktop(runner: Runner, options: DesktopOptions, global: GlobalOptions): Promise<ShotResult> {
@@ -85,7 +114,7 @@ export async function captureDesktop(runner: Runner, options: DesktopOptions, gl
   if (!global.imageOnly) {
     if (await runner.exists("guiport")) {
       const tree = await runner.run(["guiport", "tree"]);
-      text = tree.code === 0 ? parseStructuredText("a11y", tree.stdout) : undefined;
+      text = tree.code === 0 ? parseStructuredText("a11y", tree.stdout, global.maxChars) : undefined;
       if (!text?.text) notes.push("guiport tree unavailable; using OCR");
     }
     const ocrPath = image?.path ?? imagePathForOcr;
@@ -130,11 +159,11 @@ async function safeMaybeImage(runner: Runner, global: GlobalOptions, notes: stri
   }
 }
 
-function parseStructuredText(source: "a11y" | "observe", stdout: string): TextBlock {
+function parseStructuredText(source: "a11y" | "observe", stdout: string, maxChars: number): TextBlock {
   try {
-    return { source, text: jsonToText(JSON.parse(stdout)), notes: [] };
+    return { source, text: jsonToText(JSON.parse(stdout), maxChars), notes: [] };
   } catch {
-    return { source, text: compactText(stdout), notes: [] };
+    return { source, text: compactText(stdout, maxChars), notes: [] };
   }
 }
 
