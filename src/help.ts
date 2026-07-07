@@ -5,7 +5,7 @@ export function helpText(): string {
 
 Usage:
   shotport window [--window <title>] [--region x,y,w,h] [flags]
-  shotport browser <url|-> [--element <sel>] [--clip x,y,w,h] [flags]
+  shotport browser <url|-> [--element <sel>] [--clip x,y,w,h] [--live] [flags]
   shotport app <name> [--window <title>] [--region x,y,w,h] [flags]
   shotport desktop [--region x,y,w,h] [flags]
   shotport ios [flags]
@@ -25,6 +25,8 @@ Flags:
   --full-text          Keep all extracted text — don't truncate
   --jpeg               Convert budgeted image to JPEG
   --webp               Convert budgeted image to WebP when cwebp exists
+  --live               browser only: capture through an already-open, authenticated
+                       Chrome via 'abx live' (endpoint from ABX_LIVE_CDP_URL)
   -h, --help           Show help
   --version            Print version
 

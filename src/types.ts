@@ -18,6 +18,9 @@ export interface BrowserOptions {
   url: string;
   element?: string;
   clip?: string;
+  // Capture through an already-open, authenticated Chrome via `abx live` (CDP).
+  // Opt-in with --live; abx reads the endpoint from ABX_LIVE_CDP_URL.
+  live?: boolean;
 }
 
 export interface AppOptions {

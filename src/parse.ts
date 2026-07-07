@@ -45,9 +45,15 @@ export function parseArgv(argv: string[]): Command {
   if (subcommand === "browser") {
     const url = rest.shift();
     if (!url) throw new UsageError("browser requires <url|->");
+    let live = false;
+    const liveIdx = rest.indexOf("--live");
+    if (liveIdx !== -1) {
+      live = true;
+      rest.splice(liveIdx, 1);
+    }
     const { element, clip } = parseNamed(rest, ["--element", "--clip"]);
     ensureNoExtra(rest);
-    return { kind: "browser", global, options: { url, element, clip } };
+    return { kind: "browser", global, options: { url, element, clip, live } };
   }
 
   if (subcommand === "app") {

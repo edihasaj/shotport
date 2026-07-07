@@ -7,9 +7,16 @@ describe("parseArgv", () => {
     const command = parseArgv(["browser", "https://example.com", "--element", "main", "--budget", "900", "--webp"]);
     expect(command.kind).toBe("browser");
     if (command.kind !== "browser") return;
-    expect(command.options).toEqual({ url: "https://example.com", element: "main", clip: undefined });
+    expect(command.options).toEqual({ url: "https://example.com", element: "main", clip: undefined, live: false });
     expect(command.global.budget).toBe(900);
     expect(command.global.format).toBe("webp");
+  });
+
+  test("parses browser --live opt-in", () => {
+    const command = parseArgv(["browser", "https://example.com", "--live"]);
+    expect(command.kind).toBe("browser");
+    if (command.kind !== "browser") return;
+    expect(command.options.live).toBe(true);
   });
 
   test("rejects incompatible output modes", () => {

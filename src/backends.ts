@@ -9,26 +9,36 @@ import { compactText, jsonToText, ocrImage } from "./text";
 export async function captureBrowser(runner: Runner, options: BrowserOptions, global: GlobalOptions): Promise<ShotResult> {
   const notes: string[] = [];
   if (!(await runner.exists("abx"))) return missing("browser", "abx");
+  // With --live, attach to an already-open, authenticated Chrome (logged-in apps)
+  // via `abx live <cmd>` — abx reads the CDP endpoint from ABX_LIVE_CDP_URL. Opt-in
+  // (not env-auto) since that var is often left set. Live mode has a slightly
+  // different command set (no `wait`; `snapshot` instead of `accessibility`).
+  const live = options.live === true;
+  const abx = (cmd: string, ...rest: string[]): string[] => (live ? ["abx", "live", cmd, ...rest] : ["abx", cmd, ...rest]);
+  if (live) notes.push("live authenticated session (abx live)");
   const url = options.url === "-" ? compactText(await Bun.stdin.text(), 1000) : options.url;
-  await requireOk(runner, ["abx", "goto", url], "abx goto");
-  await requireOk(runner, ["abx", "wait", "--networkidle"], "abx wait --networkidle");
+  await requireOk(runner, abx("goto", url), "abx goto");
+  // `wait` is default-mode only and best-effort; ignore if unsupported (live).
+  await runner.run(abx("wait", "--networkidle"));
 
   let text: TextBlock | undefined;
   if (!global.imageOnly) {
-    const a11y = await runner.run(["abx", "accessibility"]);
+    // Live mode has no `accessibility`; fall back to `snapshot` (also an a11y tree).
+    let a11y = await runner.run(abx("accessibility"));
+    if (a11y.code !== 0 && live) a11y = await runner.run(abx("snapshot"));
     if (a11y.code === 0) text = { source: "a11y", text: compactText(a11y.stdout, global.maxChars), notes: [] };
-    else text = { source: "none", text: "", notes: [`abx accessibility failed: ${a11y.stderr.trim() || a11y.stdout.trim()}`] };
+    else text = { source: "none", text: "", notes: [`abx a11y failed: ${a11y.stderr.trim() || a11y.stdout.trim()}`] };
   }
 
   const image = await maybeImage(runner, global, async (rawPath) => {
-    const args = ["abx", "screenshot"];
+    const args = abx("screenshot");
     if (options.clip) args.push("--clip", options.clip);
     if (options.element) args.push(options.element);
     args.push(rawPath);
     await requireOk(runner, args, "abx screenshot");
   });
 
-  return { target: `browser ${url}`, image, text, notes };
+  return { target: `browser ${url}${live ? " (live)" : ""}`, image, text, notes };
 }
 
 export async function captureApp(runner: Runner, options: AppOptions, global: GlobalOptions): Promise<ShotResult> {

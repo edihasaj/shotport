@@ -6,6 +6,14 @@ All notable changes to shotport are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- **`browser --live`**: capture through an already-open, authenticated Chrome via
+  `abx live` (endpoint from `ABX_LIVE_CDP_URL`), so logged-in apps can be
+  screenshotted instead of a fresh, unauthenticated session. Opt-in (not
+  env-auto). Live mode maps around the different `abx live` command set
+  (`snapshot` instead of `accessibility`; `wait` is best-effort).
+
 ## [0.2.0]
 
 ### Added
