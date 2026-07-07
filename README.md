@@ -148,18 +148,6 @@ Desktop flow uses `guiport screenshot` when present, then `screencapture`. iOS u
 
 On macOS, desktop and app pixels require Screen Recording permission for the invoking terminal/tool. If the permission is missing, `shotport` keeps the run useful by returning any available accessibility text plus a note such as `screen_recording_not_granted`; grant it with `guiport doctor --fix` or System Settings → Privacy & Security → Screen Recording.
 
-## The agent fleet
-
-`shotport` is one tool in a suite of standalone, agent-facing CLIs that compose:
-
-| Project | Role |
-|---|---|
-| [**shotport**](https://github.com/edihasaj/shotport) | Token-cheap screenshot capture. Text first, budgeted pixels only when needed. You are here. |
-| [**guiport**](https://github.com/edihasaj/guiport) | Playwright for desktop apps. AX tree + OCR fallback. `shotport` calls it for app/desktop capture. |
-| [**abx**](https://github.com/edihasaj/abx) | Browser automation for agents. `shotport` calls it for browser capture and accessibility text. |
-| [**vmlab**](https://github.com/edihasaj/vmlab) | Cross-OS verify orchestrator. Composes these tools across any reachable target. |
-| [**spendwatch**](https://github.com/edihasaj/spendwatch) | Token/$ leaderboards for coding agents — the reason `shotport` exists. |
-
 ## Development
 
 ```sh
