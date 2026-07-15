@@ -4,9 +4,15 @@ All notable changes to shotport are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1]
 
 ### Added
+
+- **`shotport doctor`**: check and request the macOS Screen Recording permission
+  via native APIs (`CGRequestScreenCaptureAccess`), so a fresh install prompts
+  the user and registers shotport in the permission list instead of needing a
+  manual add. Opens the relevant System Settings pane when a toggle is still
+  needed; also reports Accessibility status.
 
 - **`browser --live`**: capture through an already-open, authenticated Chrome via
   `abx live` (endpoint from `ABX_LIVE_CDP_URL`), so logged-in apps can be

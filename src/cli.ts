@@ -3,6 +3,7 @@ import { helpText, VERSION } from "./help";
 import { parseArgv } from "./parse";
 import { ProcessRunner } from "./runner";
 import { captureAndroid, captureApp, captureBrowser, captureDesktop, captureIos, captureWindow } from "./backends";
+import { runDoctor } from "./doctor";
 import { formatResult } from "./output";
 import type { Runner, ShotResult } from "./types";
 
@@ -16,6 +17,9 @@ export async function main(argv: string[], runner: Runner = new ProcessRunner())
     if (command.kind === "version") {
       process.stdout.write(`${VERSION}\n`);
       return 0;
+    }
+    if (command.kind === "doctor") {
+      return runDoctor(runner);
     }
 
     const result = await dispatch(command, runner);
@@ -35,7 +39,7 @@ export async function main(argv: string[], runner: Runner = new ProcessRunner())
   }
 }
 
-type RunnableCommand = Exclude<ReturnType<typeof parseArgv>, { kind: "help" | "version" }>;
+type RunnableCommand = Exclude<ReturnType<typeof parseArgv>, { kind: "help" | "version" | "doctor" }>;
 
 async function dispatch(command: RunnableCommand, runner: Runner): Promise<ShotResult> {
   if (command.kind === "browser") return captureBrowser(runner, command.options, command.global);

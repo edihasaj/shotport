@@ -1,4 +1,4 @@
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";
 
 export function helpText(): string {
   return `shotport ${VERSION}
@@ -10,6 +10,7 @@ Usage:
   shotport desktop [--region x,y,w,h] [flags]
   shotport ios [flags]
   shotport android [flags]
+  shotport doctor            check/grant macOS Screen Recording permission
 
 Smart screenshot capture for agents: structured text first, budgeted pixels only when needed.
 'window' captures whatever app is frontmost right now — including window text scrolled out of view.

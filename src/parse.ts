@@ -78,6 +78,10 @@ export function parseArgv(argv: string[]): Command {
 
   if (subcommand === "ios") return { kind: "ios", global };
   if (subcommand === "android") return { kind: "android", global };
+  if (subcommand === "doctor") {
+    ensureNoExtra(rest);
+    return { kind: "doctor" };
+  }
 
   throw new UsageError(`unknown subcommand: ${subcommand}`);
 }
