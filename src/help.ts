@@ -1,4 +1,4 @@
-export const VERSION = "0.2.1";
+export const VERSION = "0.2.2";
 
 export function helpText(): string {
   return `shotport ${VERSION}
@@ -11,6 +11,7 @@ Usage:
   shotport ios [flags]
   shotport android [flags]
   shotport doctor            check/grant macOS Screen Recording permission
+  shotport ocr <image>       OCR an image file to text (Apple Vision)
 
 Smart screenshot capture for agents: structured text first, budgeted pixels only when needed.
 'window' captures whatever app is frontmost right now — including window text scrolled out of view.

@@ -47,7 +47,8 @@ export type Command =
   | { kind: "desktop"; global: GlobalOptions; options: DesktopOptions }
   | { kind: "ios"; global: GlobalOptions }
   | { kind: "android"; global: GlobalOptions }
-  | { kind: "doctor" };
+  | { kind: "doctor" }
+  | { kind: "ocr"; path: string; global: GlobalOptions };
 
 export interface RunResult {
   code: number;

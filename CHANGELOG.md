@@ -4,6 +4,15 @@ All notable changes to shotport are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2]
+
+### Added
+
+- **`shotport ocr <image>`**: OCR an image file to text via Apple Vision
+  (falls back to tesseract). Exposes the OCR shotport already used internally, so
+  agents can extract text from any screenshot (e.g. reply text from a chat UI
+  whose WebView content the a11y tree does not expose).
+
 ## [0.2.1]
 
 ### Added

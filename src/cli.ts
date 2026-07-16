@@ -21,6 +21,16 @@ export async function main(argv: string[], runner: Runner = new ProcessRunner())
     if (command.kind === "doctor") {
       return runDoctor(runner);
     }
+    if (command.kind === "ocr") {
+      const { ocrImage } = await import("./text");
+      const block = await ocrImage(runner, command.path);
+      if (command.global.json) {
+        process.stdout.write(JSON.stringify({ text: block.text, source: block.source, notes: block.notes }) + "\n");
+      } else {
+        process.stdout.write(block.text + (block.text.endsWith("\n") ? "" : "\n"));
+      }
+      return block.text.trim() ? 0 : 1;
+    }
 
     const result = await dispatch(command, runner);
     process.stdout.write(formatResult(result, command.global.json));
@@ -39,7 +49,7 @@ export async function main(argv: string[], runner: Runner = new ProcessRunner())
   }
 }
 
-type RunnableCommand = Exclude<ReturnType<typeof parseArgv>, { kind: "help" | "version" | "doctor" }>;
+type RunnableCommand = Exclude<ReturnType<typeof parseArgv>, { kind: "help" | "version" | "doctor" | "ocr" }>;
 
 async function dispatch(command: RunnableCommand, runner: Runner): Promise<ShotResult> {
   if (command.kind === "browser") return captureBrowser(runner, command.options, command.global);
