@@ -8,6 +8,9 @@ export interface Call {
 export class MockRunner implements Runner {
   readonly calls: Call[] = [];
   readonly commands = new Set<string>();
+  // Default tests to the macOS capture path so they run identically on any CI
+  // host; per-OS tests can override this.
+  platform: NodeJS.Platform = "darwin";
   private handlers: Array<{ match: (args: string[]) => boolean; result: RunResult | ((args: string[]) => Promise<RunResult> | RunResult) }> = [];
 
   constructor(commands: string[] = []) {

@@ -17,8 +17,9 @@ export type CaptureKind =
   | { kind: "app"; name: string };
 
 export async function capture(runner: Runner, target: CaptureKind, rawPath: string): Promise<string> {
-  if (process.platform === "darwin") return captureMac(runner, target, rawPath);
-  if (process.platform === "win32") return captureWindows(runner, target, rawPath);
+  const platform = runner.platform ?? process.platform;
+  if (platform === "darwin") return captureMac(runner, target, rawPath);
+  if (platform === "win32") return captureWindows(runner, target, rawPath);
   return captureLinux(runner, target, rawPath);
 }
 

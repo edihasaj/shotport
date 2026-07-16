@@ -59,6 +59,10 @@ export interface RunResult {
 export interface Runner {
   run(args: string[], input?: string): Promise<RunResult>;
   exists(command: string): Promise<boolean>;
+  // Optional platform override for capture dispatch; defaults to process.platform.
+  // Real runners leave this unset; tests set it to exercise a specific OS path
+  // deterministically regardless of the CI host.
+  platform?: NodeJS.Platform;
 }
 
 export interface TextBlock {
