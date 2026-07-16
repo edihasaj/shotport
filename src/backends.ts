@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { AppOptions, BrowserOptions, DesktopOptions, GlobalOptions, Runner, ShotResult, TextBlock, WindowOptions } from "./types";
 import { BackendError } from "./errors";
 import { budgetImage } from "./image";
+import { capture } from "./platform";
 import { compactText, jsonToText, ocrImage } from "./text";
 
 export async function captureBrowser(runner: Runner, options: BrowserOptions, global: GlobalOptions): Promise<ShotResult> {
@@ -42,37 +43,28 @@ export async function captureBrowser(runner: Runner, options: BrowserOptions, gl
 }
 
 export async function captureApp(runner: Runner, options: AppOptions, global: GlobalOptions): Promise<ShotResult> {
-  if (!(await runner.exists("guiport"))) return missing(`app ${options.name}`, "guiport");
   const notes: string[] = [];
   let text: TextBlock | undefined;
-  if (!global.imageOnly) {
+  const hasGuiport = await runner.exists("guiport");
+
+  // Text: the accessibility tree via guiport (macOS) when available; otherwise
+  // we OCR the image below (cross-platform).
+  if (!global.imageOnly && hasGuiport) {
     const args = ["guiport", "tree", "--app", options.name];
     if (options.window) args.push("--window", options.window);
     const tree = await runner.run(args);
-    if (tree.code === 0) {
-      text = parseStructuredText("a11y", tree.stdout, global.maxChars);
-    } else {
-      const observeArgs = ["guiport", "observe", "--app", options.name];
-      if (options.window) observeArgs.push("--window", options.window);
-      const observed = await runner.run(observeArgs);
-      text = observed.code === 0
-        ? { source: "observe", text: compactText(observed.stdout, global.maxChars), notes: [`guiport tree failed: ${tree.stderr.trim() || tree.stdout.trim()}`] }
-        : { source: "none", text: "", notes: [`guiport tree failed: ${tree.stderr.trim() || tree.stdout.trim()}`, `guiport observe failed: ${observed.stderr.trim() || observed.stdout.trim()}`] };
-    }
+    if (tree.code === 0) text = parseStructuredText("a11y", tree.stdout, global.maxChars);
   }
 
+  // Image: platform capture — guiport (mac), PrintWindow (Windows), import (Linux).
   const image = await safeMaybeImage(runner, global, notes, async (rawPath) => {
-    if (options.region) {
-      await requireOk(runner, ["screencapture", "-x", "-R", options.region, rawPath], "screencapture region");
-      notes.push("used screencapture for --region");
-      return;
-    }
-    const args = ["guiport", "screenshot", "--app", options.name, "-o", rawPath];
-    if (options.window) args.push("--window", options.window);
-    await requireOk(runner, args, "guiport screenshot");
+    const note = options.region
+      ? await capture(runner, { kind: "screen", region: options.region }, rawPath)
+      : await capture(runner, { kind: "app", name: options.name }, rawPath);
+    if (note) throw new BackendError(note);
   });
 
-  if (!global.imageOnly && text?.source === "none" && image) text = await ocrImage(runner, image.path);
+  if (!global.imageOnly && (!text || !text.text) && image) text = await ocrImage(runner, image.path);
   return { target: `app ${options.name}`, image, text, notes };
 }
 
@@ -80,16 +72,22 @@ export async function captureApp(runner: Runner, options: AppOptions, global: Gl
 // Resolves the active app via `guiport apps`, then runs the app flow, whose
 // `guiport tree` dump includes window text scrolled out of view.
 export async function captureWindow(runner: Runner, options: WindowOptions, global: GlobalOptions): Promise<ShotResult> {
-  if (!(await runner.exists("guiport"))) return missing("window", "guiport");
-  const active = await runner.run(["guiport", "apps", "--json"]);
-  if (active.code !== 0) {
-    return { target: "window", notes: [`guiport apps failed: ${active.stderr.trim() || active.stdout.trim()}`] };
+  // macOS: resolve the frontmost app via guiport, then run the app flow (its
+  // a11y tree includes text scrolled out of view).
+  if (await runner.exists("guiport")) {
+    const active = await runner.run(["guiport", "apps", "--json"]);
+    if (active.code !== 0) {
+      return { target: "window", notes: [`guiport apps failed: ${active.stderr.trim() || active.stdout.trim()}`] };
+    }
+    const name = frontmostApp(active.stdout);
+    if (!name) return { target: "window", notes: ["no frontmost app with a window found"] };
+    const result = await captureApp(runner, { name, window: options.window, region: options.region }, global);
+    return { ...result, target: `window ${name}${options.window ? ` · ${options.window}` : ""}` };
   }
-  const name = frontmostApp(active.stdout);
-  if (!name) return { target: "window", notes: ["no frontmost app with a window found"] };
-
-  const result = await captureApp(runner, { name, window: options.window, region: options.region }, global);
-  return { ...result, target: `window ${name}${options.window ? ` · ${options.window}` : ""}` };
+  // Windows/Linux without guiport: capture the desktop (frontmost-window
+  // capture would need a platform helper; the desktop still gives usable OCR).
+  const result = await captureDesktop(runner, { region: options.region }, global);
+  return { ...result, target: "window (desktop fallback)", notes: [...result.notes, "no guiport; captured desktop"] };
 }
 
 function frontmostApp(stdout: string): string | undefined {
@@ -109,14 +107,8 @@ export async function captureDesktop(runner: Runner, options: DesktopOptions, gl
   const notes: string[] = [];
   let imagePathForOcr: string | undefined;
   const image = await safeMaybeImage(runner, global, notes, async (rawPath) => {
-    if (options.region) await requireOk(runner, ["screencapture", "-x", "-R", options.region, rawPath], "screencapture region");
-    else if (await runner.exists("guiport")) {
-      const guiport = await runner.run(["guiport", "screenshot", "-o", rawPath]);
-      if (guiport.code !== 0) {
-        notes.push(`guiport screenshot failed; used screencapture: ${guiport.stderr.trim() || guiport.stdout.trim()}`);
-        await requireOk(runner, ["screencapture", "-x", rawPath], "screencapture");
-      }
-    } else await requireOk(runner, ["screencapture", "-x", rawPath], "screencapture");
+    const note = await capture(runner, { kind: "screen", region: options.region }, rawPath);
+    if (note) throw new BackendError(note);
     imagePathForOcr = rawPath;
   });
 

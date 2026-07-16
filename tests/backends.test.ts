@@ -111,10 +111,10 @@ describe("backends", () => {
     expect(result.text?.text).toContain("Grocery list");
   });
 
-  test("window reports cleanly when guiport is absent", async () => {
+  test("window falls back to desktop capture when guiport is absent", async () => {
     const result = await captureWindow(new MockRunner([]), {}, global);
-    expect(result.image).toBeUndefined();
-    expect(result.notes.join("\n")).toContain("guiport missing");
+    expect(result.target).toContain("desktop");
+    expect(result.notes.join("\n")).toContain("no guiport");
   });
 
   test("--full-text keeps text past the default cap", async () => {
