@@ -4,6 +4,24 @@ All notable changes to shotport are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+### Added
+
+- **Cross-platform capture** (`src/platform.ts`): Windows (PowerShell GDI
+  `CopyFromScreen` for the screen, user32 `PrintWindow` for an app window by
+  title) and Linux (`grim`/`scrot`/ImageMagick `import`). macOS unchanged.
+- **Windows OCR** via the built-in `Windows.Media.Ocr` WinRT engine (no
+  tesseract needed); Linux OCR via tesseract. `shotport ocr`, `app`, `desktop`,
+  and `window` now work on all three OSes.
+- Release now also publishes a **Windows** binary.
+
+### Notes
+
+- Windows **screen capture** needs an interactive desktop session — run shotport
+  as the logged-in user (Task Scheduler "only when logged on" / startup), not a
+  service/SSH (session 0) context. OCR of a file works in any session.
+
 ## [0.2.2]
 
 ### Added

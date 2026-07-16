@@ -5,9 +5,13 @@ import type { Runner, TextBlock } from "./types";
 
 export async function ocrImage(runner: Runner, imagePath: string): Promise<TextBlock> {
   const notes: string[] = [];
-  const vision = await visionOcr(runner, imagePath);
-  if (vision.text.trim()) return { source: "ocr", text: compactText(vision.text), notes: vision.notes };
-  notes.push(...vision.notes);
+
+  // macOS: Apple Vision. Windows: built-in Windows.Media.Ocr (no install needed).
+  const native = process.platform === "win32"
+    ? await windowsOcr(runner, imagePath)
+    : await visionOcr(runner, imagePath);
+  if (native.text.trim()) return { source: "ocr", text: compactText(native.text), notes: native.notes };
+  notes.push(...native.notes);
 
   if (await runner.exists("tesseract")) {
     const tess = await runner.run(["tesseract", imagePath, "stdout"]);
@@ -44,6 +48,37 @@ async function visionOcr(runner: Runner, imagePath: string): Promise<{ text: str
   if (result.code !== 0) return { text: "", notes: [`Apple Vision OCR failed: ${result.stderr.trim() || result.stdout.trim()}`] };
   return { text: result.stdout, notes: [] };
 }
+
+// Windows: OCR via the built-in Windows.Media.Ocr WinRT engine (no install).
+async function windowsOcr(runner: Runner, imagePath: string): Promise<{ text: string; notes: string[] }> {
+  const dir = await mkdtemp(join(tmpdir(), "shotport-winocr-"));
+  const script = join(dir, "ocr.ps1");
+  await writeFile(script, WIN_OCR_PS1, "utf8");
+  const result = await runner.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-Path", imagePath]);
+  if (result.code !== 0) return { text: "", notes: [`Windows OCR failed: ${result.stderr.trim() || result.stdout.trim()}`] };
+  return { text: result.stdout, notes: [] };
+}
+
+const WIN_OCR_PS1 = `param([string]$Path)
+Add-Type -AssemblyName System.Runtime.WindowsRuntime | Out-Null
+$asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+  $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and
+  $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1' })[0]
+function Await($op, $type) {
+  $t = $asTask.MakeGenericMethod($type).Invoke($null, @($op)); $t.Wait(-1) | Out-Null; $t.Result
+}
+[Windows.Storage.StorageFile,           Windows.Storage,                ContentType=WindowsRuntime] | Out-Null
+[Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,       ContentType=WindowsRuntime] | Out-Null
+[Windows.Media.Ocr.OcrEngine,           Windows.Media.Ocr,              ContentType=WindowsRuntime] | Out-Null
+$file    = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($Path)) ([Windows.Storage.StorageFile])
+$stream  = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
+$decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($stream)) ([Windows.Graphics.Imaging.BitmapDecoder])
+$bitmap  = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])
+$engine  = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
+if (-not $engine) { Write-Error 'no OCR language installed'; exit 1 }
+$res = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
+$res.Lines | ForEach-Object { $_.Text }
+`;
 
 function walk(value: unknown, parts: string[]): void {
   if (typeof value === "string") {

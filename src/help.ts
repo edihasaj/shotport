@@ -1,4 +1,4 @@
-export const VERSION = "0.2.2";
+export const VERSION = "0.3.0";
 
 export function helpText(): string {
   return `shotport ${VERSION}

@@ -26,6 +26,7 @@ jobs:
           bun build ./index.ts --compile --target=bun-darwin-x64   --outfile dist/shotport-darwin-x64
           bun build ./index.ts --compile --target=bun-linux-x64     --outfile dist/shotport-linux-x64
           bun build ./index.ts --compile --target=bun-linux-arm64   --outfile dist/shotport-linux-arm64
+          bun build ./index.ts --compile --target=bun-windows-x64   --outfile dist/shotport-windows-x64.exe
       - name: checksums
         run: cd dist && shasum -a 256 shotport-* > SHA256SUMS.txt
       - name: release
@@ -36,5 +37,6 @@ jobs:
             dist/shotport-darwin-x64
             dist/shotport-linux-x64
             dist/shotport-linux-arm64
+            dist/shotport-windows-x64.exe
             dist/SHA256SUMS.txt
           generate_release_notes: true
