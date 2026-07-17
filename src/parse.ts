@@ -83,10 +83,13 @@ export function parseArgv(argv: string[]): Command {
     return { kind: "doctor" };
   }
   if (subcommand === "ocr") {
+    const boxesIdx = rest.indexOf("--boxes");
+    const boxes = boxesIdx !== -1;
+    if (boxes) rest.splice(boxesIdx, 1);
     const path = rest.shift();
     if (!path) throw new UsageError("ocr requires <image>");
     ensureNoExtra(rest);
-    return { kind: "ocr", path, global };
+    return { kind: "ocr", path, boxes, global };
   }
 
   throw new UsageError(`unknown subcommand: ${subcommand}`);

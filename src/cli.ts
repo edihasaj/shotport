@@ -22,6 +22,12 @@ export async function main(argv: string[], runner: Runner = new ProcessRunner())
       return runDoctor(runner);
     }
     if (command.kind === "ocr") {
+      if (command.boxes) {
+        const { ocrBoxes } = await import("./text");
+        const { boxes, notes } = await ocrBoxes(runner, command.path);
+        process.stdout.write(JSON.stringify({ boxes, notes }) + "\n");
+        return boxes.length ? 0 : 1;
+      }
       const { ocrImage } = await import("./text");
       const block = await ocrImage(runner, command.path);
       if (command.global.json) {

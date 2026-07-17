@@ -48,7 +48,7 @@ export type Command =
   | { kind: "ios"; global: GlobalOptions }
   | { kind: "android"; global: GlobalOptions }
   | { kind: "doctor" }
-  | { kind: "ocr"; path: string; global: GlobalOptions };
+  | { kind: "ocr"; path: string; boxes: boolean; global: GlobalOptions };
 
 export interface RunResult {
   code: number;
@@ -69,6 +69,15 @@ export interface TextBlock {
   source: "a11y" | "observe" | "ocr" | "none";
   text: string;
   notes: string[];
+}
+
+// One OCR line with its bounding box in image pixels (top-left origin).
+export interface TextBox {
+  text: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface ImageInfo {
