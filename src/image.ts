@@ -143,7 +143,7 @@ async function jpegHeaderSize(fh: Awaited<ReturnType<typeof open>>): Promise<{ w
   for (;;) {
     const { bytesRead } = await fh.read(seg, 0, 4, offset);
     if (bytesRead < 4 || seg[0] !== 0xff) return undefined;
-    const marker = seg[1];
+    const marker = seg[1] ?? 0;
     const length = seg.readUInt16BE(2);
     // SOF0..SOF15 (excluding 0xC4 DHT, 0xC8 JPG, 0xCC DAC) carry frame dimensions.
     if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {

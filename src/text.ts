@@ -43,7 +43,7 @@ export function parseBoxLines(stdout: string): TextBox[] {
     if (!line.trim()) continue;
     const parts = line.split("\t");
     if (parts.length < 5) continue;
-    const [x, y, w, h] = parts.slice(0, 4).map(Number);
+    const [x, y, w, h] = parts.slice(0, 4).map(Number) as [number, number, number, number];
     const text = parts.slice(4).join("\t").trim();
     if (!text || [x, y, w, h].some((n) => !Number.isFinite(n))) continue;
     boxes.push({ text, x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) });
@@ -79,7 +79,9 @@ async function tesseractBoxes(runner: Runner, imagePath: string): Promise<{ boxe
   const rows = result.stdout.split(/\r?\n/);
   const header = rows.shift()?.split("\t") ?? [];
   const col = (name: string) => header.indexOf(name);
-  const [ci, cb, cp, cl, cx, cy, cw, ch, ct] = ["conf", "block_num", "par_num", "line_num", "left", "top", "width", "height", "text"].map(col);
+  const [ci, cb, cp, cl, cx, cy, cw, ch, ct] = ["conf", "block_num", "par_num", "line_num", "left", "top", "width", "height", "text"].map(col) as [
+    number, number, number, number, number, number, number, number, number,
+  ];
   const lines = new Map<string, { x0: number; y0: number; x1: number; y1: number; words: string[] }>();
   for (const row of rows) {
     const f = row.split("\t");
