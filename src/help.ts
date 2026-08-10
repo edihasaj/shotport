@@ -1,4 +1,6 @@
-export const VERSION = "0.3.0";
+import packageMetadata from "../package.json";
+
+export const VERSION = packageMetadata.version;
 
 export function helpText(): string {
   return `shotport ${VERSION}
