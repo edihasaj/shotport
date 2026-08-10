@@ -12,7 +12,7 @@ Usage:
   shotport desktop [--region x,y,w,h] [flags]
   shotport ios [flags]
   shotport android [flags]
-  shotport doctor            check/grant macOS Screen Recording permission
+  shotport doctor            set up guiport's macOS permissions
   shotport ocr <image>       OCR an image file to text (Apple Vision)
   shotport ocr <image> --boxes  OCR to JSON with per-line bounding boxes (locate text)
 

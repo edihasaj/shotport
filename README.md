@@ -53,7 +53,15 @@ This is the agent-facing version of "attach my current window" — text first, s
 
 ## Install
 
-Requires [Bun](https://bun.sh) on the build machine.
+Homebrew is recommended. On macOS it installs guiport as the single signed
+Screen Recording and Accessibility permission owner.
+
+```sh
+brew install edihasaj/tap/shotport
+shotport doctor
+```
+
+Building from source requires [Bun](https://bun.sh).
 
 ```sh
 # Build + install the standalone binary to /opt/homebrew/bin
@@ -75,10 +83,10 @@ One-liner from source:
 curl -fsSL https://raw.githubusercontent.com/edihasaj/shotport/main/scripts/install.sh | sh
 ```
 
-The binary is standalone after compilation. Runtime backends are optional and checked gracefully:
+The binary is standalone after compilation. Runtime backends are checked gracefully:
 
 - [`abx`](https://github.com/edihasaj/abx) for browser capture, accessibility text, selectors, and clips
-- [`guiport`](https://github.com/edihasaj/guiport) for macOS app/desktop screenshots and accessibility text
+- [`guiport`](https://github.com/edihasaj/guiport) for macOS app/desktop screenshots, accessibility text, and the single macOS permission identity. Installed automatically by Homebrew.
 - `screencapture`, `sips`, `xcrun simctl`, and `adb` for native fallbacks
 - Apple Vision via `swift`, then `tesseract`, for OCR fallback
 - `cwebp` for WebP output when requested
@@ -146,12 +154,12 @@ App flow:
 
 Desktop flow uses `guiport screenshot` when present, then `screencapture`. iOS uses `xcrun simctl io booted screenshot`. Android uses `adb exec-out screencap -p` and returns a clean missing-backend note when `adb` is absent.
 
-On macOS, desktop and app pixels require Screen Recording permission. Run
-**`shotport doctor`** once after installing — it asks macOS for the permission
-(registering shotport in the list and firing the prompt) and opens the right
-System Settings pane if it still needs a toggle. If the permission is missing at
-capture time, `shotport` keeps the run useful by returning any available
-accessibility text plus a note such as `screen_recording_not_granted`.
+On macOS, run **`shotport doctor`** once after installing. It delegates to
+`guiport doctor --fix`, so only the signed guiport app requests Screen Recording
+and Accessibility. Shotport does not create another macOS permission entry. If
+permission is missing at capture time, shotport keeps the run useful by returning
+any available accessibility text plus a note such as
+`screen_recording_not_granted`.
 
 ## Development
 
