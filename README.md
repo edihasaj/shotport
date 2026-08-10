@@ -87,7 +87,7 @@ The binary is standalone after compilation. Runtime backends are checked gracefu
 
 - [`abx`](https://github.com/edihasaj/abx) for browser capture, accessibility text, selectors, and clips
 - [`guiport`](https://github.com/edihasaj/guiport) for macOS app/desktop screenshots, accessibility text, and the single macOS permission identity. Installed automatically by Homebrew.
-- `screencapture`, `sips`, `xcrun simctl`, and `adb` for native fallbacks
+- `sips`, `xcrun simctl`, and `adb` for native processing and device capture
 - Apple Vision via `swift`, then `tesseract`, for OCR fallback
 - `cwebp` for WebP output when requested
 
@@ -150,9 +150,12 @@ App flow:
 
 1. `guiport tree --app <name> [--window <title>]`
 2. `guiport screenshot --app <name> [--window <title>] -o <path>`
-3. `screencapture -R` when `--region` is used
+3. `sips` crops the guiport image locally when `--region` is used
 
-Desktop flow uses `guiport screenshot` when present, then `screencapture`. iOS uses `xcrun simctl io booted screenshot`. Android uses `adb exec-out screencap -p` and returns a clean missing-backend note when `adb` is absent.
+Desktop flow uses `guiport screenshot`; it never falls back to another macOS
+capture identity. iOS uses `xcrun simctl io booted screenshot`. Android uses
+`adb exec-out screencap -p` and returns a clean missing-backend note when `adb`
+is absent.
 
 On macOS, run **`shotport doctor`** once after installing. It delegates to
 `guiport doctor --fix`, so only the signed guiport app requests Screen Recording

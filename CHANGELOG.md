@@ -4,6 +4,13 @@ All notable changes to shotport are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-08-10
+
+### Changed
+
+- macOS region capture now captures through guiport and crops locally instead
+  of falling back to `screencapture`, preserving the single permission identity.
+
 ## [0.3.3] - 2026-08-10
 
 ### Changed
@@ -80,7 +87,8 @@ All notable changes to shotport are documented here. Format loosely follows
 - Output modes: `--text-only`, `--image-only`, `--json`, `--out`.
 - Graceful backend degradation — missing tools return a clean note instead of crashing.
 
-[Unreleased]: https://github.com/edihasaj/shotport/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/edihasaj/shotport/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/edihasaj/shotport/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/edihasaj/shotport/compare/v0.3.2...v0.3.3
 [0.2.0]: https://github.com/edihasaj/shotport/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/edihasaj/shotport/releases/tag/v0.1.0

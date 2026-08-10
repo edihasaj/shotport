@@ -37,18 +37,28 @@ describe("backends", () => {
     expect(result.image?.path.startsWith(tmpdir())).toBe(true);
   });
 
-  test("desktop falls back to screencapture when guiport is absent", async () => {
-    const runner = new MockRunner(["sips", "swift"]);
+  test("desktop region captures through guiport then crops locally", async () => {
+    const runner = new MockRunner(["guiport", "sips", "swift"]);
     runner.on((args) => args[0] === "sips" && args.includes("pixelWidth"), {
       stdout: "  pixelWidth: 800\n  pixelHeight: 600\n",
     });
-    runner.on((args) => args[0] === "screencapture", async (args) => {
+    runner.on((args) => args[0] === "guiport" && args[1] === "screenshot", async (args) => {
       await writeFile(args.at(-1)!, "");
       return {};
     });
     const result = await captureDesktop(runner, { region: "0,0,100,100" }, global);
-    expect(runner.calls.some((call) => call.args[0] === "screencapture")).toBe(true);
+    expect(runner.calls.some((call) => call.args[0] === "guiport" && call.args[1] === "screenshot")).toBe(true);
+    expect(runner.calls.some((call) => call.args.includes("--cropToHeightWidth"))).toBe(true);
+    expect(runner.calls.some((call) => call.args[0] === "screencapture")).toBe(false);
     expect(result.target).toBe("desktop");
+  });
+
+  test("desktop capture does not fall back to another macOS permission identity", async () => {
+    const runner = new MockRunner(["sips"]);
+    const result = await captureDesktop(runner, {}, global);
+    expect(result.image).toBeUndefined();
+    expect(result.notes.join("\n")).toContain("guiport not installed");
+    expect(runner.calls.some((call) => call.args[0] === "screencapture")).toBe(false);
   });
 
   test("desktop reports permission-denied image capture without losing a11y text", async () => {
@@ -59,10 +69,6 @@ describe("backends", () => {
     runner.on((args) => args[0] === "guiport" && args[1] === "screenshot", {
       code: 1,
       stderr: "screen_recording_not_granted",
-    });
-    runner.on((args) => args[0] === "screencapture", {
-      code: 1,
-      stderr: "could not create image from display",
     });
     const result = await captureDesktop(runner, {}, global);
     expect(result.image).toBeUndefined();

@@ -1,6 +1,6 @@
 // Cross-platform screenshot capture to a PNG file.
 //
-// macOS  — screencapture (region) or guiport (app/window), Apple Vision OCR.
+// macOS  — guiport capture, optional local sips crop, Apple Vision OCR.
 // Windows — PowerShell + GDI (full screen) / PrintWindow (a window by title).
 // Linux  — grim (wayland) / scrot / ImageMagick import (X11).
 //
@@ -25,20 +25,39 @@ export async function capture(runner: Runner, target: CaptureKind, rawPath: stri
 
 // ---------------------------------------------------------------- macOS -------
 async function captureMac(runner: Runner, t: CaptureKind, rawPath: string): Promise<string> {
+  if (!(await runner.exists("guiport"))) {
+    return "guiport not installed (required for macOS capture and its single permission identity)";
+  }
+
   if (t.kind === "screen") {
-    if (t.region) return run(runner, ["screencapture", "-x", "-R", t.region, rawPath]);
-    if (await runner.exists("guiport")) {
-      const g = await runner.run(["guiport", "screenshot", "-o", rawPath]);
-      if (g.code === 0) return "";
+    const g = await runner.run(["guiport", "screenshot", "-o", rawPath]);
+    if (g.code !== 0) {
+      return `guiport screenshot failed: ${g.stderr.trim() || g.stdout.trim()}`;
     }
-    return run(runner, ["screencapture", "-x", rawPath]);
+    return t.region ? cropMacRegion(runner, t.region, rawPath) : "";
   }
-  if (await runner.exists("guiport")) {
-    const g = await runner.run(["guiport", "screenshot", "--app", t.name, "-o", rawPath]);
-    if (g.code === 0) return "";
-    return `guiport screenshot failed: ${g.stderr.trim() || g.stdout.trim()}`;
+
+  const g = await runner.run(["guiport", "screenshot", "--app", t.name, "-o", rawPath]);
+  if (g.code === 0) return "";
+  return `guiport screenshot failed: ${g.stderr.trim() || g.stdout.trim()}`;
+}
+
+async function cropMacRegion(runner: Runner, region: string, rawPath: string): Promise<string> {
+  const values = region.split(",").map(Number);
+  if (values.length !== 4 || values.some((value) => !Number.isFinite(value))) {
+    return `invalid region '${region}' (expected x,y,w,h)`;
   }
-  return "guiport not installed (needed for app capture on macOS)";
+  const [x, y, width, height] = values as [number, number, number, number];
+  if (x < 0 || y < 0 || width <= 0 || height <= 0) {
+    return `invalid region '${region}' (x/y must be non-negative; width/height positive)`;
+  }
+  if (!(await runner.exists("sips"))) return "sips not installed (needed for macOS region cropping)";
+  return run(runner, [
+    "sips",
+    "--cropToHeightWidth", String(height), String(width),
+    "--cropOffset", String(y), String(x),
+    rawPath,
+  ]);
 }
 
 // -------------------------------------------------------------- Windows -------
