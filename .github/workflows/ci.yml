@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, ci]
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

@@ -166,6 +166,9 @@ any available accessibility text plus a note such as
 
 ## Development
 
+Push and pull-request checks run on GitHub-hosted Ubuntu 24.04. Standard hosted
+runners are free for this public repository and do not need the Azure runner.
+
 ```sh
 bun install
 bun test
